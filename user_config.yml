@@ -1,0 +1,65 @@
+# vim: set ts=2
+---
+- name: Configure user {{ username }}
+  hosts: all
+  gather_facts: no
+  become_user:  "{{ username }}"
+  become: yes
+  vars:
+    username: crash
+    github_username: crash5
+
+
+  tasks:
+    - name: Set authorized_keys for user {{ username }}
+      ansible.posix.authorized_key:
+        user: "{{ username }}"
+        state: present
+        exclusive: yes  # remove other keys
+    # TODO: apply unique to the keys
+        key: |
+          {{ lookup('file', './files/{{ username }}.authorized_key', errors='warn') }}
+          {{ lookup('url', 'https://github.com/{{ github_username }}.keys', errors='warn') }}
+
+    - name: Checkout dotfiles for user {{ username }}
+      ansible.builtin.git:
+        repo: 'https://github.com/{{ github_username }}/.config.git'
+        dest: ~/.config
+        version: master
+        update: no
+
+    - name: Add .bashrc include for user {{ username }}
+      ansible.builtin.lineinfile:
+        state: present
+        path: ~/.bashrc
+        insertafter: EOF
+        search_string: source ~/.config/bash/bashrc
+        line: source ~/.config/bash/bashrc
+
+    - name: Comment out history settings from original bashrc for user {{ username }}
+      ansible.builtin.lineinfile:
+        path: ~/.bashrc
+        regexp: '(^{{ item }}.*)'
+        line: '# \1'
+        state: present
+        backrefs: yes
+      loop:
+        - HISTCONTROL
+        - HISTSIZE
+        - HISTFILESIZE
+
+    - name: Add .profile include for user {{ username }}
+      ansible.builtin.lineinfile:
+        state: present
+        path: ~/.profile
+        insertbefore: BOF
+        search_string: . ~/.config/bash/profile
+        line: . ~/.config/bash/profile
+
+    - name: Run bootstrap script for user {{ username }}
+      ansible.builtin.shell:
+        cmd: . ~/.profile && ./bootstrap.sh
+        chdir: ~/.config/
+        creates: ~/.local/share/bash
+
+# TODO: use environment variable for the creates option
