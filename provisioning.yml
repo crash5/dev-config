@@ -79,6 +79,13 @@
         - allow_ssh
         - sftp_only
 
+    - name: Copy sshd config
+      ansible.builtin.copy:
+        src: ./files/sshd_config
+        dest: /etc/ssh/sshd_config
+        validate: 'sshd -t -f %s'
+      notify: Restart ssh
+
     # Create user
     - name: Add "crash" user
       ansible.builtin.user:
@@ -89,6 +96,13 @@
         groups:
           - allow_ssh
           - sudo
+
+  handlers:
+    - name: Restart ssh
+      ansible.builtin.service:
+        name: ssh
+        state: restarted
+
 
 # TODO: set timezone
 # TODO: use en_us.utf8 locale
