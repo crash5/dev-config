@@ -79,13 +79,6 @@
         - allow_ssh
         - sftp_only
 
-    - name: Copy sshd config
-      ansible.builtin.copy:
-        src: files/sshd_config
-        dest: /etc/ssh/sshd_config
-        validate: 'sshd -t -f %s'
-      notify: Restart ssh
-
     # Create user
     - name: Add "crash" user
       ansible.builtin.user:
@@ -93,9 +86,29 @@
         name: crash
         append: yes  # don't remove user from other groups
         shell: /bin/bash
+        password: "{{ 'dummypwd' | password_hash('sha512') }}"
+        update_password: on_create
         groups:
           - allow_ssh
           - sudo
+
+    - name: Set authorized_keys for user "crash"
+      ansible.posix.authorized_key:
+        user: "crash"
+        state: present
+        exclusive: yes  # remove other keys
+    # TODO: apply unique filter to the keys
+        key: |
+          {{ lookup('file', 'files/{{ username }}.authorized_key', errors='warn') }}
+          {{ lookup('url', 'https://github.com/{{ github_username }}.keys', errors='warn') }}
+
+    - name: Copy sshd config
+      ansible.builtin.copy:
+        src: files/sshd_config
+        dest: /etc/ssh/sshd_config
+        validate: 'sshd -t -f %s'
+      notify: Restart ssh
+
 
   handlers:
     - name: Restart ssh
