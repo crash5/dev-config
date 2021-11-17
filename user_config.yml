@@ -16,7 +16,7 @@
         user: "{{ username }}"
         state: present
         exclusive: yes  # remove other keys
-    # TODO: apply unique to the keys
+    # TODO: apply unique filter to the keys
         key: |
           {{ lookup('file', './files/{{ username }}.authorized_key', errors='warn') }}
           {{ lookup('url', 'https://github.com/{{ github_username }}.keys', errors='warn') }}
@@ -61,5 +61,3 @@
         cmd: . ~/.profile && ./bootstrap.sh
         chdir: ~/.config/
         creates: ~/.local/share/bash
-
-# TODO: use environment variable for the creates option

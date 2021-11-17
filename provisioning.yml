@@ -1,0 +1,97 @@
+# vim: set ts=2
+---
+- name: Dev provisioning and setup
+  hosts: all
+  module_defaults:
+    ansible.builtin.apt:
+      state: latest
+      install_recommends: no
+
+
+  pre_tasks:
+    - name: Update apt cache if needed
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+
+  tasks:
+    - name: Dist upgrade if available
+      ansible.builtin.apt:
+        upgrade: dist
+
+    - name: Install gnupg, required by add-ppa
+      ansible.builtin.apt:
+        name:
+          - gnupg
+
+    - name: Add git-core ppa
+      ansible.builtin.apt_repository:
+        repo: ppa:git-core/ppa
+        state: present
+
+    - name: Add neovim/stable ppa
+      ansible.builtin.apt_repository:
+        repo: ppa:neovim-ppa/stable
+        state: present
+
+    - name: Install basic packages
+      ansible.builtin.apt:
+        name:
+          - tmux
+          - neovim
+          - git
+          - wget
+          - curl
+          - htop
+          - man
+          - bash-completion
+          - sudo
+          # - strace
+          # - watch
+
+    - name: Install gocryptfs and fuse for directory encryption
+      ansible.builtin.apt:
+        name:
+          - gocryptfs
+          - fuse
+
+    - name: Remove unused packages and leftovers
+      ansible.builtin.apt:
+        state: absent
+        purge: yes
+        autoremove: yes
+        name:
+          - nano
+          - sendmail
+
+
+    # Config
+    - name: Set hostname
+      ansible.builtin.hostname:
+        name: midkemia
+
+    - name: Ensure custom user groups exists
+      ansible.builtin.group:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - allow_ssh
+        - sftp_only
+
+    # Create user
+    - name: Add "crash" user
+      ansible.builtin.user:
+        state: present
+        name: crash
+        append: yes  # don't remove user from other groups
+        shell: /bin/bash
+        groups:
+          - allow_ssh
+          - sudo
+
+# TODO: set timezone
+# TODO: use en_us.utf8 locale
+# TODO: add crash to allowed ssh users
+# TODO: copy sshd template
+# TODO: copy nftables template/user firewalld?
