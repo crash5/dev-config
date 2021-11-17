@@ -81,7 +81,7 @@
 
     - name: Copy sshd config
       ansible.builtin.copy:
-        src: ./files/sshd_config
+        src: files/sshd_config
         dest: /etc/ssh/sshd_config
         validate: 'sshd -t -f %s'
       notify: Restart ssh
