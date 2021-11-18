@@ -9,6 +9,7 @@
 
   vars:
     default_user_name: crash
+    default_user_password: "{{ lookup('password', '/dev/null chars=ascii_lowercase,digits length=5') }}"
 
   pre_tasks:
     - name: Update apt cache if needed
@@ -73,6 +74,15 @@
       ansible.builtin.hostname:
         name: midkemia
 
+    - name: Ensure en_US.UTF-8 locale exists
+      community.general.locale_gen:
+        name: en_US.UTF-8
+        state: present
+
+    - name: Set timezone to Europe/Budapest
+      community.general.timezone:
+        name: Europe/Budapest
+
     - name: Ensure custom user groups exists
       ansible.builtin.group:
         name: "{{ item }}"
@@ -81,32 +91,43 @@
         - allow_ssh
         - sftp_only
 
-    # Create user
-    - name: Ensure {{ default_user_name }} user exists
+    # Create default user
+    - name: Ensure default user exists
       ansible.builtin.user:
         state: present
         name: "{{ default_user_name }}"
         shell: /bin/bash
         update_password: on_create
-        password: ''  # can change with 'passwd' after pubkey login
+        password: "{{ default_user_password | password_hash('sha512') }}"
         append: yes  # don't remove user from other groups
         groups:
           - allow_ssh
           - sudo
+      register: ensure_user
 
-    - name: Set authorized_keys for user {{ default_user_name }}
-      ansible.posix.authorized_key:
-        user: "{{ default_user_name }}"
-        state: present
-        key: "{{ lookup('file', 'files/' ~ default_user_name ~ '.authorized_key') }}"
-        comment: "from provisioning"
+    - name: Setup default user
+      when: ensure_user.changed
+      block:
+        - name: Print password for default user
+          debug:
+            msg: "Generated password: {{ default_user_password }}"
+        - name: Force default user password change on first login
+          command: chage -d 0 {{ default_user_name }}
+        - name: Set authorized_keys for default user
+          ansible.posix.authorized_key:
+            state: present
+            user: "{{ default_user_name }}"
+            key: "{{ lookup('file', 'files/' ~ default_user_name ~ '.authorized_key') }}"
+            comment: "from provisioning"
 
     - name: Copy sshd config
       ansible.builtin.copy:
         src: files/sshd_config
         dest: /etc/ssh/sshd_config
+        mode: '0600'
         validate: 'sshd -t -f %s'
       notify: Restart ssh
+
 
 
   handlers:
@@ -117,6 +138,4 @@
 
 
 # TODO: regenerate sshd keys?
-# TODO: set timezone
-# TODO: use en_us.utf8 locale
 # TODO: copy nftables template/user firewalld?
