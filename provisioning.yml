@@ -8,8 +8,8 @@
       install_recommends: no
 
   vars:
+    generate_password: "{{ lookup('password', '/dev/null chars=ascii_lowercase,digits length=5') }}"
     default_user_name: crash
-    default_user_password: "{{ lookup('password', '/dev/null chars=ascii_lowercase,digits length=5') }}"
 
   pre_tasks:
     - name: Update apt cache if needed
@@ -92,6 +92,10 @@
         - sftp_only
 
     # Create default user
+    - name: Generate default user password
+      set_fact:
+        default_user_password: "{{ generate_password }}"
+
     - name: Ensure default user exists
       ansible.builtin.user:
         state: present
@@ -127,7 +131,6 @@
         mode: '0600'
         validate: 'sshd -t -f %s'
       notify: Restart ssh
-
 
 
   handlers:
