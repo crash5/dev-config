@@ -7,6 +7,8 @@
       state: latest
       install_recommends: no
 
+  vars:
+    default_user_name: crash
 
   pre_tasks:
     - name: Update apt cache if needed
@@ -80,27 +82,24 @@
         - sftp_only
 
     # Create user
-    - name: Add "crash" user
+    - name: Ensure {{ default_user_name }} user exists
       ansible.builtin.user:
         state: present
-        name: crash
-        append: yes  # don't remove user from other groups
+        name: "{{ default_user_name }}"
         shell: /bin/bash
-        password: "{{ 'dummypwd' | password_hash('sha512') }}"
         update_password: on_create
+        password: ''  # can change with 'passwd' after pubkey login
+        append: yes  # don't remove user from other groups
         groups:
           - allow_ssh
           - sudo
 
-    - name: Set authorized_keys for user "crash"
+    - name: Set authorized_keys for user {{ default_user_name }}
       ansible.posix.authorized_key:
-        user: "crash"
+        user: "{{ default_user_name }}"
         state: present
-        exclusive: yes  # remove other keys
-    # TODO: apply unique filter to the keys
-        key: |
-          {{ lookup('file', 'files/{{ username }}.authorized_key', errors='warn') }}
-          {{ lookup('url', 'https://github.com/{{ github_username }}.keys', errors='warn') }}
+        key: "{{ lookup('file', 'files/' ~ default_user_name ~ '.authorized_key') }}"
+        comment: "from provisioning"
 
     - name: Copy sshd config
       ansible.builtin.copy:
@@ -117,8 +116,7 @@
         state: restarted
 
 
+# TODO: regenerate sshd keys?
 # TODO: set timezone
 # TODO: use en_us.utf8 locale
-# TODO: add crash to allowed ssh users
-# TODO: copy sshd template
 # TODO: copy nftables template/user firewalld?
