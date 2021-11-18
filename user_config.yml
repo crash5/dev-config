@@ -18,8 +18,8 @@
         exclusive: yes  # remove other keys
     # TODO: apply unique filter to the keys
         key: |
-          {{ lookup('file', 'files/{{ username }}.authorized_key', errors='warn') }}
-          {{ lookup('url', 'https://github.com/{{ github_username }}.keys', errors='warn') }}
+          {{ lookup('file', 'files/' ~ username ~ '.authorized_key', errors='warn') }}
+          {{ lookup('url', 'https://github.com/' ~ github_username ~ '.keys', errors='warn') if github_username else '' }}
 
     - name: Checkout dotfiles for user {{ username }}
       ansible.builtin.git:
