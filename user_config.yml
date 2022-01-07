@@ -30,6 +30,7 @@
     - name: Add .bashrc include for user {{ username }}
       ansible.builtin.lineinfile:
         state: present
+        create: yes
         path: ~/.bashrc
         insertafter: EOF
         search_string: source ~/.config/bash/bashrc
@@ -38,6 +39,7 @@
     - name: Comment out history settings from original bashrc for user {{ username }}
       ansible.builtin.lineinfile:
         path: ~/.bashrc
+        create: yes
         regexp: '(^{{ item }}.*)'
         line: '# \1'
         state: present
@@ -50,6 +52,7 @@
     - name: Add .profile include for user {{ username }}
       ansible.builtin.lineinfile:
         state: present
+        create: yes
         path: ~/.profile
         insertbefore: BOF
         search_string: . ~/.config/bash/profile
