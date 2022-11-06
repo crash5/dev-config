@@ -4,7 +4,7 @@ DebianBanner no
 KbdInteractiveAuthentication no  # ChallengeResponseAuthentication is a deprecated alias for this.
 PasswordAuthentication no
 PermitRootLogin no
-# ? UsePAM yes
+UsePAM yes
 
 AuthenticationMethods publickey
 
