@@ -42,7 +42,7 @@
       ansible.builtin.apt:
         name:
           - tmux
-          - neovim
+          # - neovim
           - git
           - wget
           - curl
@@ -50,14 +50,15 @@
           - man
           - bash-completion
           - sudo
+          - net-tools
           # - strace
           # - watch
 
-    - name: Install gocryptfs and fuse for directory encryption
-      ansible.builtin.apt:
-        name:
-          - gocryptfs
-          - fuse
+#     - name: Install gocryptfs and fuse for directory encryption
+#       ansible.builtin.apt:
+#         name:
+#           - gocryptfs
+#           - fuse
 
     - name: Remove unused packages and leftovers
       ansible.builtin.apt:
@@ -80,7 +81,8 @@
         state: present
 
     - name: Set default locale to en_US.UTF-8
-      command: localectl set-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+      command: localectl set-locale LANG=en_US.UTF-8
+      # LC_ALL=en_US.UTF-8
 
     - name: Set timezone to Europe/Budapest
       community.general.timezone:
@@ -143,5 +145,7 @@
         state: restarted
 
 
-# TODO: regenerate sshd keys?
-# TODO: copy nftables template/user firewalld?
+# TODO: regenerate sshd host keys?
+# TODO: copy nftables template/user firewalld?, install nftables?
+# TODO: install packages from deb/url: ripgrep, nvim, bat?
+# TODO: nvim update-alternatives?
