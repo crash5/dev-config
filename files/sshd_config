@@ -1,18 +1,48 @@
+# https://www.ssh-audit.com/hardening_guides.html#debian_12
+
+#awk '$5 >= 3071' /etc/ssh/moduli > /etc/ssh/moduli.safe
+#mv -f /etc/ssh/moduli.safe /etc/ssh/moduli
+
+#ssh-keygen -M generate -O bits=3072 moduli
+#ssh-keygen -M screen -f moduli moduli-final
+#mv moduli-final /usr/local/etc/ssh/
+
+#rm -f /etc/ssh/ssh_host_*
+#ssh-keygen -t rsa -b 4096 -f /etc/ssh/ssh_host_rsa_key -N ""
+#ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key -N ""
+
+Protocol 2
+#ssh -Q key
+HostKeyAlgorithms sk-ssh-ed25519-cert-v01@openssh.com,ssh-ed25519-cert-v01@openssh.com,rsa-sha2-512-cert-v01@openssh.com,sk-ssh-ed25519@openssh.com,ssh-ed25519,rsa-sha2-512
+HostKey /etc/ssh/ssh_host_ed25519_key
+HostKey /etc/ssh/ssh_host_rsa_key
+#ssh -Q kex
+KexAlgorithms sntrup761x25519-sha512@openssh.com,curve25519-sha256,curve25519-sha256@libssh.org,diffie-hellman-group18-sha512,diffie-hellman-group16-sha512
+#ssh -Q cipher
+Ciphers       chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
+#ssh -Q mac
+MACs          hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com
+#ssh -Q pubkeyacceptedkeytypes
+PubkeyAcceptedAlgorithms sk-ssh-ed25519@openssh.com,ssh-ed25519,sk-ssh-ed25519-cert-v01@openssh.com,ssh-ed25519-cert-v01@openssh.com,rsa-sha2-512-cert-v01@openssh.com,rsa-sha2-512
+
 PrintMotd no
 DebianBanner no
 
 KbdInteractiveAuthentication no  # ChallengeResponseAuthentication is a deprecated alias for this.
+KerberosAuthentication no
+GSSAPIAuthentication no
 PasswordAuthentication no
 PermitRootLogin no
+PermitEmptyPasswords no
+
 UsePAM yes
 
 AuthenticationMethods publickey
-
 AllowGroups allow_ssh
 
-Ciphers       chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr
-KexAlgorithms curve25519-sha256@libssh.org
-MACs          hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com
+# Wait 120s * 3 for a client before closing connection, ask it if it is still alive after every 120s
+ClientAliveCountMax 3
+ClientAliveInterval 120
 
 LoginGraceTime 30
 MaxAuthTries 3
