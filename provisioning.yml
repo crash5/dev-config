@@ -33,11 +33,6 @@
         repo: ppa:git-core/ppa
         state: present
 
-    - name: Add neovim/stable ppa
-      ansible.builtin.apt_repository:
-        repo: ppa:neovim-ppa/stable
-        state: present
-
     - name: Install basic packages
       ansible.builtin.apt:
         name:
