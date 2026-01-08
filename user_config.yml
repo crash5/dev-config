@@ -24,7 +24,7 @@
       ansible.builtin.git:
         repo: 'https://github.com/{{ github_username }}/.config.git'
         dest: ~/.config
-        version: master
+        version: main
         update: no
 
     - name: Add .bashrc include for user {{ username }}
