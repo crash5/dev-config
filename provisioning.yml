@@ -13,6 +13,8 @@
 
   pre_tasks:
     - name: Update apt cache if needed
+      tags:
+        - packages
       ansible.builtin.apt:
         update_cache: yes
         cache_valid_time: 3600
@@ -24,20 +26,25 @@
         upgrade: dist
 
     - name: Install gnupg, required by add-ppa
+      tags:
+        - packages
       ansible.builtin.apt:
         name:
           - gnupg
 
     - name: Add git-core ppa
+      tags:
+        - packages
       ansible.builtin.apt_repository:
         repo: ppa:git-core/ppa
         state: present
 
     - name: Install basic packages
+      tags:
+        - packages
       ansible.builtin.apt:
         name:
           - tmux
-          # - neovim
           - git
           - wget
           - curl
@@ -45,7 +52,7 @@
           - man
           - bash-completion
           - sudo
-          - net-tools
+          # - net-tools
           # - strace
           # - watch
 
@@ -56,6 +63,8 @@
 #           - fuse
 
     - name: Remove unused packages and leftovers
+      tags:
+        - packages
       ansible.builtin.apt:
         state: absent
         purge: yes

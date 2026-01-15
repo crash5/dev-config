@@ -1,30 +1,34 @@
-## Inventory
+# Dev config
+
+## Ansible
+
+### Inventory
+```ini
 crydee ansible_host=<IP> ansible_user=root ansible_ssh_pass=<PASSWORD>
+```
 
-
-## Provision
-ansible-playbook -i inventory --limit crydee provisioning.yml
-
-ansible-playbook -i 127.0.0.1, provisioning.yml
+### Remote
+`ansible-playbook -i inventory --limit crydee provisioning.yml`
+`ansible-playbook -i inventory --limit crydee user_config.yml -e ansible_user=crash --private-key=<KEYFILEPATH> --start-at-task "Checkout dotfiles for user *"`
 
 ANSIBLE_HOST_KEY_CHECKING=false ...
 
 
-## User config
-ansible-playbook -i inventory --limit crydee user_config.yml -e ansible_user=crash --private-key=<KEYFILEPATH> --start-at-task "Checkout dotfiles for user *"
+### Local
+`ansible-playbook --connection=local -i 127.0.0.1, provisioning.yml --tags packages --become --ask-become-pass --step -v`
+`ansible-playbook --connection=local -i 127.0.0.1, user_config.yml --start-at-task "Checkout dotfiles for user *"`
 
-ansible-playbook -i 127.0.0.1, user_config.yml -e ansible_user=crash
 
+### Other
 --ask-pass --ask-become-pass
+-k
+
+`ansible all -i localhost, -m debug -a "msg={{ lookup('password', '/dev/null chars=ascii_lowercase,digits length=5') }}"`
 
 
-ansible-playbook -i diphda.uberspace.de, user_config.yml -e ansible_user=crash
-ansible-playbook -i inventory user_config.yml -e ansible_user=crash --private-key=<KEYFILEPATH> -k
+## Other commands
 
-ansible all -i localhost, -m debug -a "msg={{ lookup('password', '/dev/null chars=ascii_lowercase,digits length=5') }}"
-
-
-
+```bash
 exa compile: podman run -it --rm -v "$PWD":/usr/src/myapp -w /usr/src/myapp rust cargo build --release
 
 
@@ -40,3 +44,4 @@ sudo update-alternatives --install /usr/bin/vim vim /usr/bin/nvim 100
 
 update-alternatives --display vi
 sudo update-alternatives --install /usr/bin/vi vi /usr/bin/nvim 100
+```
